@@ -133,7 +133,7 @@ module Process
 		# Helper methods for static daemon instance
 		
 		def self.instance
-			@@instance ||= self.new
+			@instance ||= self.new
 		end
 		
 		# Main entry point for command line:

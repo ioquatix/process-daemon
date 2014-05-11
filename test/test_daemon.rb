@@ -75,6 +75,16 @@ class XMLRPCDaemon < Process::Daemon
 	end
 end
 
+class SleepDaemon < Process::Daemon
+	def working_directory
+		File.join(__dir__, "tmp")
+	end
+	
+	def startup
+		sleep 1 while true
+	end
+end
+
 class DaemonTest < MiniTest::Test
 	def setup
 		XMLRPCDaemon.start
@@ -91,5 +101,9 @@ class DaemonTest < MiniTest::Test
 		total = rpc.call("total")
 
 		assert_equal 10, total
+	end
+	
+	def test_instances
+		refute_equal SleepDaemon.instance, XMLRPCDaemon.instance
 	end
 end

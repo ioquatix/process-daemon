@@ -130,10 +130,30 @@ module Process
 			Process.kill(0, :INT)
 		end
 		
-		def self.daemonize(argv = ARGV)
+		# Helper methods for static daemon instance
+		
+		def self.instance
 			@@instance ||= self.new
-			
-			Controller.daemonize(@@instance, argv)
+		end
+		
+		# Main entry point for command line:
+		def self.daemonize(argv = ARGV)
+			Controller.daemonize(instance, argv)
+		end
+		
+		# Start the daemon instance:
+		def self.start
+			Controller.start(instance)
+		end
+		
+		# Stop the daemon instance:
+		def self.stop
+			Controller.stop(instance)
+		end
+		
+		# Get the status of the daemon instance, `:stopped`, `:running` or `:unknown`.
+		def self.status
+			ProcessFile.status(instance)
 		end
 	end
 end

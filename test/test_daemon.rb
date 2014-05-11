@@ -77,12 +77,11 @@ end
 
 class DaemonTest < MiniTest::Test
 	def setup
-		@daemon = XMLRPCDaemon.new
-		Process::Daemon::Controller.start(@daemon)
+		XMLRPCDaemon.start
 	end
 
 	def teardown
-		Process::Daemon::Controller.stop(@daemon)
+		XMLRPCDaemon.stop
 	end
 
 	def test_connection

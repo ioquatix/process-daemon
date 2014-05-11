@@ -29,24 +29,24 @@ module Process
 		module Controller
 			# This function is called from the daemon executable. It processes ARGV and checks whether the user is asking for `start`, `stop`, `restart`, `status`.
 			def self.daemonize(daemon, argv = ARGV)
-				case argv.shift
-				when 'start'
+				case argv.shift.to_sym
+				when :start
 					start(daemon)
 					status(daemon)
-				when 'stop'
+				when :stop
 					stop(daemon)
 					status(daemon)
 					ProcessFile.cleanup(daemon)
-				when 'restart'
+				when :restart
 					stop(daemon)
 					ProcessFile.cleanup(daemon)
 					start(daemon)
 					status(daemon)
-				when 'status'
+				when :status
 					status(daemon)
 				else
 					puts "Invalid command. Please specify start, restart, stop or status."
-					exit
+					exit 1
 				end
 			end
 

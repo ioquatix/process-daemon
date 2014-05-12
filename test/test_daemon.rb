@@ -106,4 +106,22 @@ class DaemonTest < MiniTest::Test
 	def test_instances
 		refute_equal SleepDaemon.instance, XMLRPCDaemon.instance
 	end
+	
+	def test_direct_methods
+		SleepDaemon.instance.spawn
+		
+		sleep 0.1
+		
+		assert_equal :running, SleepDaemon.status
+		
+		SleepDaemon.instance.kill
+		
+		sleep 0.1
+		
+		assert_equal :unknown, SleepDaemon.status
+		
+		Process::Daemon::ProcessFile.clear(SleepDaemon.instance)
+		
+		assert_equal :stopped, SleepDaemon.status
+	end
 end

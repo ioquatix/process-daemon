@@ -138,6 +138,7 @@ module Process
 			end
 		end
 		
+		# Launch the daemon directly:
 		def spawn
 			prefork
 			mark_log
@@ -171,6 +172,15 @@ module Process
 					$stderr.flush
 				end
 			end
+		end
+		
+		# Kill the daemon with the given signal directly:
+		def kill(signal = :INT)
+			pid = ProcessFile.recall(self)
+
+			# Interrupt the process group:
+			pgid = -Process.getpgid(pid)
+			Process.kill(signal, pgid)
 		end
 		
 		# Helper methods for static daemon instance

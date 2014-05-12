@@ -130,6 +130,49 @@ module Process
 			Process.kill(0, :INT)
 		end
 		
+		def run
+			startup
+			
+			trap("INT") do
+				shutdown
+			end
+		end
+		
+		def spawn
+			prefork
+			mark_log
+
+			fork do
+				Process.setsid
+				exit if fork
+
+				ProcessFile.store(self, Process.pid)
+
+				File.umask 0000
+				Dir.chdir working_directory
+
+				$stdin.reopen "/dev/null"
+				$stdout.reopen log_file_path, "a"
+				$stdout.sync = true
+				
+				$stderr.reopen $stdout
+				$stderr.sync = true
+
+				begin
+					run
+				rescue Exception => error
+					$stderr.puts "=== Daemon Exception Backtrace @ #{Time.now.to_s} ==="
+					$stderr.puts "#{error.class}: #{error.message}"
+					$!.backtrace.each { |at| $stderr.puts at }
+					$stderr.puts "=== Daemon Crashed ==="
+					$stderr.flush
+				ensure
+					$stderr.puts "=== Daemon Stopping @ #{Time.now.to_s} ==="
+					$stderr.flush
+				end
+			end
+		end
+		
 		# Helper methods for static daemon instance
 		
 		def self.instance

@@ -52,65 +52,28 @@ module Process
 
 			# This function starts the supplied daemon
 			def self.start(daemon)
-				puts Rainbow("Starting daemon...").color(:blue)
+				$stderr.puts Rainbow("Starting daemon...").blue
 
 				case ProcessFile.status(daemon)
 				when :running
-					$stderr.puts Rainbow("Daemon already running!").color(:blue)
+					$stderr.puts Rainbow("Daemon already running!").blue
 					return
 				when :stopped
 					# We are good to go...
 				else
-					$stderr.puts Rainbow("Daemon in unknown state! Will clear previous state and continue.").color(:red)
-					status(daemon)
+					$stderr.puts Rainbow("Daemon in unknown state! Will clear previous state and continue.").red
 					ProcessFile.clear(daemon)
 				end
 
-				daemon.prefork
-				daemon.mark_log
+				daemon.spawn
 
-				fork do
-					Process.setsid
-					exit if fork
-
-					ProcessFile.store(daemon, Process.pid)
-
-					File.umask 0000
-					Dir.chdir daemon.working_directory
-
-					$stdin.reopen "/dev/null"
-					$stdout.reopen daemon.log_file_path, "a"
-					$stdout.sync = true
-					
-					$stderr.reopen $stdout
-					$stderr.sync = true
-
-					begin
-						daemon.startup
-						
-						trap("INT") do
-							daemon.shutdown
-						end
-					rescue
-						$stderr.puts "=== Daemon Exception Backtrace @ #{Time.now.to_s} ==="
-						$stderr.puts "#{$!.class}: #{$!.message}"
-						$!.backtrace.each { |at| $stderr.puts at }
-						$stderr.puts "=== Daemon Crashed ==="
-						$stderr.flush
-					ensure
-						$stderr.puts "=== Daemon Stopping @ #{Time.now.to_s} ==="
-						$stderr.flush
-					end
-				end
-
-				puts Rainbow("Waiting for daemon to start...").color(:blue)
 				sleep 0.1
 				timer = TIMEOUT
 				pid = ProcessFile.recall(daemon)
 
 				while pid == nil and timer > 0
 					# Wait a moment for the forking to finish...
-					puts Rainbow("Waiting for daemon to start (#{timer}/#{TIMEOUT})").color(:blue)
+					$stderr.puts Rainbow("Waiting for daemon to start (#{timer}/#{TIMEOUT})").blue
 					sleep 1
 
 					# If the daemon has crashed, it is never going to start...
@@ -126,29 +89,29 @@ module Process
 			def self.status(daemon)
 				case ProcessFile.status(daemon)
 				when :running
-					puts Rainbow("Daemon status: running pid=#{ProcessFile.recall(daemon)}").color(:green)
+					puts Rainbow("Daemon status: running pid=#{ProcessFile.recall(daemon)}").green
 				when :unknown
 					if daemon.crashed?
-						puts Rainbow("Daemon status: crashed").color(:red)
+						puts Rainbow("Daemon status: crashed").red
 
 						$stdout.flush
-						$stderr.puts Rainbow("Dumping daemon crash log:").color(:red)
+						$stderr.puts Rainbow("Dumping daemon crash log:").red
 						daemon.tail_log($stderr)
 					else
-						puts Rainbow("Daemon status: unknown").color(:red)
+						puts Rainbow("Daemon status: unknown").red
 					end
 				when :stopped
-					puts Rainbow("Daemon status: stopped").color(:blue)
+					puts Rainbow("Daemon status: stopped").blue
 				end
 			end
 
 			# Stops the daemon process.
 			def self.stop(daemon)
-				puts Rainbow("Stopping daemon...").color(:blue)
+				$stderr.puts Rainbow("Stopping daemon...").blue
 
 				# Check if the pid file exists...
 				unless File.file?(daemon.process_file_path)
-					puts Rainbow("Pid file not found. Is the daemon running?").color(:red)
+					$stderr.puts Rainbow("Pid file not found. Is the daemon running?").red
 					return
 				end
 
@@ -156,7 +119,7 @@ module Process
 
 				# Check if the daemon is already stopped...
 				unless ProcessFile.running(daemon)
-					puts Rainbow("Pid #{pid} is not running. Has daemon crashed?").color(:red)
+					$stderr.puts Rainbow("Pid #{pid} is not running. Has daemon crashed?").red
 
 					daemon.tail_log($stderr)
 
@@ -176,7 +139,7 @@ module Process
 				while ProcessFile.running(daemon) and attempts > 0
 					sig = (attempts >= 2) ? "KILL" : "TERM"
 
-					puts Rainbow("Sending #{sig} to process group #{pgid}...").color(:red)
+					$stderr.puts Rainbow("Sending #{sig} to process group #{pgid}...").red
 					Process.kill(sig, pgid)
 
 					attempts -= 1
@@ -185,7 +148,7 @@ module Process
 
 				# If after doing our best the daemon is still running (pretty odd)...
 				if ProcessFile.running(daemon)
-					puts Rainbow("Daemon appears to be still running!").color(:red)
+					$stderr.puts Rainbow("Daemon appears to be still running!").red
 					return
 				end
 

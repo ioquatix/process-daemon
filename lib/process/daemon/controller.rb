@@ -51,7 +51,7 @@ module Process
 				when :status
 					status
 				else
-					raise ArgumentError.new("Invalid command. Please specify start, restart, stop or status.")
+					$stderr.puts Rainbow("Invalid command. Please specify start, restart, stop or status.").red
 				end
 			end
 			

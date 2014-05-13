@@ -138,75 +138,26 @@ module Process
 			end
 		end
 		
-		# Launch the daemon directly:
-		def spawn
-			prefork
-			mark_log
-
-			fork do
-				Process.setsid
-				exit if fork
-
-				ProcessFile.store(self, Process.pid)
-
-				File.umask 0000
-				Dir.chdir working_directory
-
-				$stdin.reopen "/dev/null"
-				$stdout.reopen log_file_path, "a"
-				$stdout.sync = true
-				
-				$stderr.reopen $stdout
-				$stderr.sync = true
-
-				begin
-					run
-				rescue Exception => error
-					$stderr.puts "=== Daemon Exception Backtrace @ #{Time.now.to_s} ==="
-					$stderr.puts "#{error.class}: #{error.message}"
-					$!.backtrace.each { |at| $stderr.puts at }
-					$stderr.puts "=== Daemon Crashed ==="
-					$stderr.flush
-				ensure
-					$stderr.puts "=== Daemon Stopping @ #{Time.now.to_s} ==="
-					$stderr.flush
-				end
-			end
-		end
-		
-		# Kill the daemon with the given signal directly:
-		def kill(signal = :INT)
-			pid = ProcessFile.recall(self)
-
-			# Interrupt the process group:
-			pgid = -Process.getpgid(pid)
-			Process.kill(signal, pgid)
-		end
-		
-		# Helper methods for static daemon instance
-		
 		def self.instance
 			@instance ||= self.new
 		end
 		
-		# Main entry point for command line:
-		def self.daemonize(argv = ARGV)
-			Controller.daemonize(instance, argv)
+		def self.controller
+			@controller ||= Controller.new(instance)
 		end
 		
 		# Start the daemon instance:
 		def self.start
-			Controller.start(instance)
+			controller.start
 		end
 		
 		# Stop the daemon instance:
 		def self.stop
-			Controller.stop(instance)
+			controller.stop
 		end
 		
-		# Get the status of the daemon instance, `:stopped`, `:running` or `:unknown`.
 		def self.status
-			ProcessFile.status(instance)
+			controller.status
 		end
 	end
 end

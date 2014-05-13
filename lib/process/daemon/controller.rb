@@ -27,8 +27,10 @@ module Process
 
 		# This module contains functionality related to starting and stopping the @daemon, and code for processing command line input.
 		class Controller
-			def initialize(daemon)
+			def initialize(daemon, options = {})
 				@daemon = daemon
+				
+				@options = options
 			end
 			
 			# This function is called from the daemon executable. It processes ARGV and checks whether the user is asking for `start`, `stop`, `restart`, `status`.

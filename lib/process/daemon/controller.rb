@@ -30,7 +30,7 @@ module Process
 			def initialize(daemon, options = {})
 				@daemon = daemon
 				
-				@options = options
+				@output = options[:output] || $stdout
 			end
 			
 			# This function is called from the daemon executable. It processes ARGV and checks whether the user is asking for `start`, `stop`, `restart`, `status`.
@@ -51,7 +51,7 @@ module Process
 				when :status
 					status
 				else
-					$stderr.puts Rainbow("Invalid command. Please specify start, restart, stop or status.").red
+					@stderr.puts Rainbow("Invalid command. Please specify start, restart, stop or status.").red
 				end
 			end
 			
@@ -93,16 +93,16 @@ module Process
 
 			# This function starts the supplied @daemon
 			def start
-				$stderr.puts Rainbow("Starting daemon...").blue
+				@output.puts Rainbow("Starting daemon...").blue
 
 				case ProcessFile.status(@daemon)
 				when :running
-					$stderr.puts Rainbow("Daemon already running!").blue
+					@output.puts Rainbow("Daemon already running!").blue
 					return
 				when :stopped
 					# We are good to go...
 				else
-					$stderr.puts Rainbow("Daemon in unknown state! Will clear previous state and continue.").red
+					@output.puts Rainbow("Daemon in unknown state! Will clear previous state and continue.").red
 					ProcessFile.clear(@daemon)
 				end
 
@@ -114,7 +114,7 @@ module Process
 
 				while pid == nil and timer > 0
 					# Wait a moment for the forking to finish...
-					$stderr.puts Rainbow("Waiting for daemon to start (#{timer}/#{TIMEOUT})").blue
+					@output.puts Rainbow("Waiting for daemon to start (#{timer}/#{TIMEOUT})").blue
 					sleep 1
 
 					# If the @daemon has crashed, it is never going to start...
@@ -128,31 +128,35 @@ module Process
 			
 			# Prints out the status of the @daemon
 			def status
-				case ProcessFile.status(@daemon)
+				daemon_state = ProcessFile.status(@daemon)
+				
+				case daemon_state
 				when :running
-					puts Rainbow("Daemon status: running pid=#{ProcessFile.recall(@daemon)}").green
+					@output.puts Rainbow("Daemon status: running pid=#{ProcessFile.recall(@daemon)}").green
 				when :unknown
 					if @daemon.crashed?
-						puts Rainbow("Daemon status: crashed").red
+						@output.puts Rainbow("Daemon status: crashed").red
 
-						$stdout.flush
-						$stderr.puts Rainbow("Dumping daemon crash log:").red
-						@daemon.tail_log($stderr)
+						@output.flush
+						@output.puts Rainbow("Dumping daemon crash log:").red
+						@daemon.tail_log(@output)
 					else
-						puts Rainbow("Daemon status: unknown").red
+						@output.puts Rainbow("Daemon status: unknown").red
 					end
 				when :stopped
-					puts Rainbow("Daemon status: stopped").blue
+					@output.puts Rainbow("Daemon status: stopped").blue
 				end
+				
+				return daemon_state
 			end
 
 			# Stops the @daemon process.
 			def stop
-				$stderr.puts Rainbow("Stopping daemon...").blue
+				@output.puts Rainbow("Stopping daemon...").blue
 
 				# Check if the pid file exists...
 				unless File.file?(@daemon.process_file_path)
-					$stderr.puts Rainbow("Pid file not found. Is the daemon running?").red
+					@output.puts Rainbow("Pid file not found. Is the daemon running?").red
 					return
 				end
 
@@ -160,7 +164,7 @@ module Process
 
 				# Check if the @daemon is already stopped...
 				unless ProcessFile.running(@daemon)
-					$stderr.puts Rainbow("Pid #{pid} is not running. Has daemon crashed?").red
+					@output.puts Rainbow("Pid #{pid} is not running. Has daemon crashed?").red
 
 					@daemon.tail_log($stderr)
 
@@ -180,7 +184,7 @@ module Process
 				while ProcessFile.running(@daemon) and attempts > 0
 					sig = (attempts >= 2) ? "KILL" : "TERM"
 
-					$stderr.puts Rainbow("Sending #{sig} to process group #{pgid}...").red
+					@output.puts Rainbow("Sending #{sig} to process group #{pgid}...").red
 					Process.kill(sig, pgid)
 
 					attempts -= 1
@@ -189,7 +193,7 @@ module Process
 
 				# If after doing our best the @daemon is still running (pretty odd)...
 				if ProcessFile.running(@daemon)
-					$stderr.puts Rainbow("Daemon appears to be still running!").red
+					@output.puts Rainbow("Daemon appears to be still running!").red
 					return
 				end
 

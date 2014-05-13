@@ -106,4 +106,24 @@ class DaemonTest < MiniTest::Test
 	def test_instances
 		refute_equal SleepDaemon.instance, XMLRPCDaemon.instance
 	end
+	
+	def test_output
+		output = StringIO.new
+		
+		controller = Process::Daemon::Controller.new(XMLRPCDaemon.instance, :output => output)
+		
+		assert_equal :running, controller.status
+		
+		assert_match /Daemon status: running pid=\d+/, output.string
+		
+		output.rewind
+		controller.stop
+		
+		assert_match /Stopping daemon/, output.string
+		
+		output.rewind
+		controller.start
+		
+		assert_match /Starting daemon/, output.string
+	end
 end

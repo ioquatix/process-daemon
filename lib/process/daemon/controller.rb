@@ -27,6 +27,7 @@ module Process
 
 		# This module contains functionality related to starting and stopping the @daemon, and code for processing command line input.
 		class Controller
+			# `options[:output]` specifies where to write textual output describing what is going on.
 			def initialize(daemon, options = {})
 				@daemon = daemon
 				
@@ -55,7 +56,7 @@ module Process
 				end
 			end
 			
-			# Launch the @daemon directly:
+			# Fork a child process, detatch it and run the daemon code.
 			def spawn
 				@daemon.prefork
 				@daemon.mark_log
@@ -91,7 +92,7 @@ module Process
 				end
 			end
 
-			# This function starts the supplied @daemon
+			# This function starts the daemon process in the background.
 			def start
 				@output.puts Rainbow("Starting daemon...").blue
 
@@ -126,7 +127,7 @@ module Process
 				end
 			end
 			
-			# Prints out the status of the @daemon
+			# Prints out the status of the daemon
 			def status
 				daemon_state = ProcessFile.status(@daemon)
 				
@@ -150,7 +151,7 @@ module Process
 				return daemon_state
 			end
 
-			# Stops the @daemon process.
+			# Stops the daemon process.
 			def stop
 				@output.puts Rainbow("Stopping daemon...").blue
 

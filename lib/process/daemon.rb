@@ -138,24 +138,36 @@ module Process
 			end
 		end
 		
+		# A shared instance of the daemon.
 		def self.instance
 			@instance ||= self.new
 		end
 		
-		def self.controller
-			@controller ||= Controller.new(instance)
+		# The process controller, responsible for managing the daemon process start, stop, restart, etc.
+		def self.controller(options = {})
+			@controller ||= Controller.new(instance, options)
 		end
 		
-		# Start the daemon instance:
+		# The main entry point for daemonized scripts.
+		def self.daemonize(*args)
+			# Wish Ruby 2.0 kwargs were backported to 1.9.3... oh well:
+			options = (args.last === Hash) ? args.pop : {}
+			argv = (args.last === Array) ? args.pop : ARGV
+			
+			controller(options).daemonize(argv)
+		end
+		
+		# Start the daemon instance.
 		def self.start
 			controller.start
 		end
 		
-		# Stop the daemon instance:
+		# Stop the daemon instance.
 		def self.stop
 			controller.stop
 		end
 		
+		# Check if the daemon is runnning or not.
 		def self.status
 			controller.status
 		end

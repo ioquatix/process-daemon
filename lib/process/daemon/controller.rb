@@ -97,7 +97,7 @@ module Process
 
 			# This function starts the daemon process in the background.
 			def start
-				@output.puts Rainbow("Starting daemon...").blue
+				@output.puts Rainbow("Starting #{@daemon.name} daemon...").blue
 
 				case ProcessFile.status(@daemon)
 				when :running
@@ -159,7 +159,7 @@ module Process
 
 			# Stops the daemon process.
 			def stop
-				@output.puts Rainbow("Stopping daemon...").blue
+				@output.puts Rainbow("Stopping #{@daemon.name} daemon...").blue
 
 				# Check if the pid file exists...
 				unless File.file?(@daemon.process_file_path)

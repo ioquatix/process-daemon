@@ -183,7 +183,7 @@ module Process
 				# it a few more times.
 				attempts = 5
 				while ProcessFile.running(@daemon) and attempts > 0
-					sig = (attempts >= 2) ? "KILL" : "TERM"
+					sig = (attempts <= 2) ? "KILL" : "TERM"
 
 					@output.puts Rainbow("Sending #{sig} to process group #{pgid}...").red
 					Process.kill(sig, pgid)

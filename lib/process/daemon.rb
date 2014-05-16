@@ -131,11 +131,11 @@ module Process
 		end
 		
 		def run
-			startup
-			
 			trap("INT") do
 				shutdown
 			end
+			
+			startup
 		end
 		
 		# A shared instance of the daemon.

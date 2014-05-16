@@ -79,7 +79,7 @@ class SleepDaemon < Process::Daemon
 	def working_directory
 		File.join(__dir__, "tmp")
 	end
-	
+
 	def startup
 		sleep 1 while true
 	end

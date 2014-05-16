@@ -49,8 +49,8 @@ module Process
 	#   runtime_directory = #{working_directory}/run
 	#   process_file_path = #{runtime_directory}/#{daemon_name}.pid
 	class Daemon
-		def initialize(base_directory = ".")
-			@base_directory = base_directory
+		def initialize(working_directory = ".")
+			@working_directory = working_directory
 		end
 		
 		# Return the name of the daemon
@@ -59,9 +59,7 @@ module Process
 		end
 
 		# The directory the daemon will run in.
-		def working_directory
-			@base_directory
-		end
+		attr :working_directory
 
 		# Return the directory to store log files in.
 		def log_directory
@@ -114,8 +112,13 @@ module Process
 
 		# The main function to setup any environment required by the daemon
 		def prefork
-			@base_directory = File.expand_path(@base_directory) if @base_directory
-
+			# We freeze the working directory because it can't change after forking:
+			@working_directory = File.expand_path(working_directory)
+			
+			def self.working_directory
+				@working_directory
+			end
+			
 			FileUtils.mkdir_p(log_directory)
 			FileUtils.mkdir_p(runtime_directory)
 		end

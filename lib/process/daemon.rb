@@ -45,16 +45,16 @@ module Process
 	# The base directory specifies a path such that:
 	#   working_directory = "."
 	#   log_directory = #{working_directory}/log
-	#   log_file_path = #{log_directory}/#{daemon_name}.log
+	#   log_file_path = #{log_directory}/#{name}.log
 	#   runtime_directory = #{working_directory}/run
-	#   process_file_path = #{runtime_directory}/#{daemon_name}.pid
+	#   process_file_path = #{runtime_directory}/#{name}.pid
 	class Daemon
 		def initialize(working_directory = ".")
 			@working_directory = working_directory
 		end
 		
 		# Return the name of the daemon
-		def daemon_name
+		def name
 			return self.class.name.gsub(/[^a-zA-Z0-9]+/, '-')
 		end
 
@@ -68,7 +68,7 @@ module Process
 
 		# Standard log file for stdout and stderr.
 		def log_file_path
-			File.join(log_directory, "#{daemon_name}.log")
+			File.join(log_directory, "#{name}.log")
 		end
 
 		# Runtime data directory for the daemon.
@@ -78,7 +78,7 @@ module Process
 
 		# Standard location of process pid file.
 		def process_file_path
-			File.join(runtime_directory, "#{daemon_name}.pid")
+			File.join(runtime_directory, "#{name}.pid")
 		end
 
 		# Mark the output log.

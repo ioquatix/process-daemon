@@ -84,7 +84,7 @@ module Process
 		# Mark the output log.
 		def mark_log
 			File.open(log_file_path, "a") do |log_file|
-				log_file.puts "=== Log Marked @ #{Time.now.to_s} ==="
+				log_file.puts "=== Log Marked @ #{Time.now.to_s} [#{Process.pid}] ==="
 			end
 		end
 

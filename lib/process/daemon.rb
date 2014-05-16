@@ -130,7 +130,7 @@ module Process
 		# The main function to stop the daemon
 		def shutdown
 			# Interrupt all children processes, preferably to stop them so that they are not left behind.
-			Process.kill(0, :INT)
+			Process.kill(:INT, 0)
 		end
 		
 		def run

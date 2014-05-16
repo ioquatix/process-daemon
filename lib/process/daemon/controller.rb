@@ -32,6 +32,9 @@ module Process
 				@daemon = daemon
 				
 				@output = options[:output] || $stdout
+				
+				# How long to wait until sending SIGTERM and eventually SIGKILL to the daemon process group when asking it to stop:
+				@stop_timeout = options[:stop_timeout] || 10.0
 			end
 			
 			# This function is called from the daemon executable. It processes ARGV and checks whether the user is asking for `start`, `stop`, `restart`, `status`.
@@ -151,6 +154,9 @@ module Process
 				return daemon_state
 			end
 
+			# How long to wait between checking the daemon process when shutting down:
+			STOP_PERIOD = 0.1
+
 			# Stops the daemon process.
 			def stop
 				@output.puts Rainbow("Stopping daemon...").blue
@@ -175,9 +181,10 @@ module Process
 				# Interrupt the process group:
 				pgid = -Process.getpgid(pid)
 				Process.kill("INT", pgid)
-				sleep 0.1
 
-				sleep 1 if ProcessFile.running(@daemon)
+				(@stop_timeout / STOP_PERIOD).to_i.times do
+					sleep STOP_PERIOD if ProcessFile.running(@daemon)
+				end
 
 				# Kill/Term loop - if the @daemon didn't die easily, shoot
 				# it a few more times.

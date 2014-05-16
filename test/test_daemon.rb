@@ -57,14 +57,14 @@ class XMLRPCDaemon < Process::Daemon
 
 		@rpc_server.mount("/RPC2", @listener)
 
-		$stdout.flush
-		$stderr.flush
-		
 		begin
+			puts "Daemon starting..."
 			@rpc_server.start
+			puts "Daemon stopping..."
 		rescue Interrupt
 			puts "Daemon interrupted..."
 		ensure
+			puts "Daemon shutdown..."
 			@rpc_server.shutdown
 		end
 	end

@@ -119,11 +119,11 @@ class DaemonTest < MiniTest::Test
 		output.rewind
 		controller.stop
 		
-		assert_match /Stopping daemon/, output.string
+		assert_match /Stopping/, output.string
 		
 		output.rewind
 		controller.start
 		
-		assert_match /Starting daemon/, output.string
+		assert_match /Starting/, output.string
 	end
 end

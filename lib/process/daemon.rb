@@ -133,7 +133,13 @@ module Process
 			Process.kill(:INT, 0)
 		end
 		
+		def title= title
+			Process.setproctitle(title)
+		end
+		
 		def run
+			self.title = self.name
+			
 			trap("INT") do
 				shutdown
 			end

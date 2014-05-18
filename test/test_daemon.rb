@@ -33,7 +33,7 @@ require 'xmlrpc/client'
 # Very simple XMLRPC daemon
 class XMLRPCDaemon < Process::Daemon
 	def working_directory
-		File.join(__dir__, "tmp")
+		File.expand_path("../tmp", __FILE__)
 	end
 	
 	def startup
@@ -77,7 +77,7 @@ end
 
 class SleepDaemon < Process::Daemon
 	def working_directory
-		File.join(__dir__, "tmp")
+		File.expand_path("../tmp", __FILE__)
 	end
 
 	def startup

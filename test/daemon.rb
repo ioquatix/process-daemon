@@ -9,8 +9,8 @@ require 'xmlrpc/server'
 
 # Very simple XMLRPC daemon
 class XMLRPCDaemon < Process::Daemon
-	def base_directory
-		File.join(__dir__, "tmp")
+	def working_directory
+		File.expand_path("../tmp", __FILE__)
 	end
 
 	def startup

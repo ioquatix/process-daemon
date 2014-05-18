@@ -133,11 +133,21 @@ module Process
 			Process.kill(:INT, 0)
 		end
 		
+		attr :title
+		
+		# Set the process title - only works after daemon has forked.
 		def title= title
-			Process.setproctitle(title)
+			@title = title
+			
+			if Process.respond_to? :setproctitle
+				Process.setproctitle(@title)
+			else
+				$0 = @title
+			end
 		end
 		
 		def run
+			
 			self.title = self.name
 			
 			trap("INT") do

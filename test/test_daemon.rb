@@ -126,4 +126,12 @@ class DaemonTest < MiniTest::Test
 		
 		assert_match /Starting/, output.string
 	end
+	
+	def test_process_title
+		pid = XMLRPCDaemon.controller.pid
+		
+		title = `ps -p #{pid} -o command=`.strip
+		
+		assert_match /XMLRPCDaemon/, title
+	end
 end

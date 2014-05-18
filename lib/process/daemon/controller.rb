@@ -154,6 +154,10 @@ module Process
 				return daemon_state
 			end
 
+			def pid
+				ProcessFile.recall(@daemon)
+			end
+
 			# How long to wait between checking the daemon process when shutting down:
 			STOP_PERIOD = 0.1
 

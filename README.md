@@ -28,9 +28,8 @@ Create a file for your daemon, e.g. `daemon.rb`:
 	
 	# Very simple XMLRPC daemon
 	class XMLRPCDaemon < Process::Daemon
-		def base_directory
-			# Should be an absolute path:
-			File.join(__dir__, "tmp")
+		def working_directory
+			File.expand_path("../tmp", __FILE__)
 		end
 	
 		def startup

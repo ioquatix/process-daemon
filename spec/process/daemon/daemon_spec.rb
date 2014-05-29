@@ -28,118 +28,114 @@ require 'webrick/https'
 require 'xmlrpc/server'
 require 'xmlrpc/client'
 
-module Process
-	class Daemon
-		module DaemonSpec
-			# Very simple XMLRPC daemon
-			class XMLRPCDaemon < Process::Daemon
-				def working_directory
-					File.expand_path("../tmp", __FILE__)
-				end
-	
-				def startup
-					puts "Starting server..."
+module Process::Daemon::DaemonSpec
+	# Very simple XMLRPC daemon
+	class XMLRPCDaemon < Process::Daemon
+		def working_directory
+			File.expand_path("../tmp", __FILE__)
+		end
 
-					@rpc_server = WEBrick::HTTPServer.new(
-						:Port => 31337,
-						:BindAddress => "0.0.0.0"
-					)
+		def startup
+			puts "Starting server..."
 
-					@listener = XMLRPC::WEBrickServlet.new
+			@rpc_server = WEBrick::HTTPServer.new(
+				:Port => 31337,
+				:BindAddress => "0.0.0.0"
+			)
 
-					@listener.add_handler("add") do |amount|
-						@count ||= 0
-						@count += amount
-					end
+			@listener = XMLRPC::WEBrickServlet.new
 
-					@listener.add_handler("total") do
-						@count
-					end
-
-					@rpc_server.mount("/RPC2", @listener)
-
-					begin
-						puts "Daemon starting..."
-						@rpc_server.start
-						puts "Daemon stopping..."
-					rescue Interrupt
-						puts "Daemon interrupted..."
-					ensure
-						puts "Daemon shutdown..."
-						@rpc_server.shutdown
-					end
-				end
-
-				def shutdown
-					puts "Stopping the RPC server..."
-					@rpc_server.stop
-				end
+			@listener.add_handler("add") do |amount|
+				@count ||= 0
+				@count += amount
 			end
 
-			class SleepDaemon < Process::Daemon
-				def working_directory
-					File.expand_path("../tmp", __FILE__)
-				end
-
-				def startup
-					sleep 1 while true
-				end
+			@listener.add_handler("total") do
+				@count
 			end
 
-			describe Daemon do
-				before do
-					XMLRPCDaemon.start
-				end
-				
-				after do
-					XMLRPCDaemon.stop
-				end
-				
-				it "should be running" do
-					expect(XMLRPCDaemon.status).to be == :running
-				end
-				
-				it "should respond to connections" do
-					rpc = XMLRPC::Client.new_from_uri("http://localhost:31337")
-					rpc.call("add", 10)
+			@rpc_server.mount("/RPC2", @listener)
 
-					total = rpc.call("total")
-					
-					expect(total).to be == 10
-				end
-				
-				it "should be a unique instance" do
-					expect(XMLRPCDaemon.instance).to_not be == SleepDaemon.instance
-				end
-				
-				it "should produce useful output" do
-					output = StringIO.new
-					
-					controller = Process::Daemon::Controller.new(XMLRPCDaemon.instance, :output => output)
-					
-					expect(controller.status).to be == :running
-					
-					expect(output.string).to match /Daemon status: running pid=\d+/
-					
-					output.rewind
-					controller.stop
-					
-					expect(output.string).to match /Stopping/
-					
-					output.rewind
-					controller.start
-					
-					expect(output.string).to match /Starting/
-				end
-				
-				it "should have correct process title" do
-					pid = XMLRPCDaemon.controller.pid
-					
-					title = `ps -p #{pid} -o command=`.strip
-					
-					expect(title).to match /XMLRPCDaemon/
-				end
+			begin
+				puts "Daemon starting..."
+				@rpc_server.start
+				puts "Daemon stopping..."
+			rescue Interrupt
+				puts "Daemon interrupted..."
+			ensure
+				puts "Daemon shutdown..."
+				@rpc_server.shutdown
 			end
+		end
+
+		def shutdown
+			puts "Stopping the RPC server..."
+			@rpc_server.stop
+		end
+	end
+
+	class SleepDaemon < Process::Daemon
+		def working_directory
+			File.expand_path("../tmp", __FILE__)
+		end
+
+		def startup
+			sleep 1 while true
+		end
+	end
+
+	describe Process::Daemon do
+		before do
+			XMLRPCDaemon.start
+		end
+		
+		after do
+			XMLRPCDaemon.stop
+		end
+		
+		it "should be running" do
+			expect(XMLRPCDaemon.status).to be == :running
+		end
+		
+		it "should respond to connections" do
+			rpc = XMLRPC::Client.new_from_uri("http://localhost:31337")
+			rpc.call("add", 10)
+
+			total = rpc.call("total")
+			
+			expect(total).to be == 10
+		end
+		
+		it "should be a unique instance" do
+			expect(XMLRPCDaemon.instance).to_not be == SleepDaemon.instance
+		end
+		
+		it "should produce useful output" do
+			output = StringIO.new
+			
+			controller = Process::Daemon::Controller.new(XMLRPCDaemon.instance, :output => output)
+			
+			expect(controller.status).to be == :running
+			
+			expect(output.string).to match /Daemon status: running pid=\d+/
+			
+			output.rewind
+			controller.stop
+			
+			expect(output.string).to match /Stopping/
+			
+			output.rewind
+			controller.start
+			
+			expect(output.string).to match /Starting/
+		end
+		
+		it "should have correct process title" do
+			pid = XMLRPCDaemon.controller.pid
+			
+			title = `ps -p #{pid} -o command=`.strip
+			
+			expect(title).to match /XMLRPCDaemon/
 		end
 	end
 end

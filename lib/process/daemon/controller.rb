@@ -55,7 +55,7 @@ module Process
 				when :status
 					status
 				else
-					@stderr.puts Rainbow("Invalid command. Please specify start, restart, stop or status.").red
+					@output.puts Rainbow("Invalid command. Please specify start, restart, stop or status.").red
 				end
 			end
 			

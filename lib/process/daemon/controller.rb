@@ -39,7 +39,7 @@ module Process
 			
 			# This function is called from the daemon executable. It processes ARGV and checks whether the user is asking for `start`, `stop`, `restart`, `status`.
 			def daemonize(argv = ARGV)
-				case argv.shift.to_sym
+				case (argv.shift || :default).to_sym
 				when :start
 					start
 					status

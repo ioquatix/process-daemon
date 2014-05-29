@@ -22,7 +22,7 @@ require 'etc'
 
 module Process
 	class Daemon
-		module Priviledges
+		module Privileges
 			# Set the user of the current process. Supply either a user ID
 			# or a user name.
 			def self.change_user(user)

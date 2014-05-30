@@ -18,27 +18,45 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'etc'
+require 'process/daemon'
+require 'process/daemon/process_file'
 
-module Process
-	class Daemon
-		module Privileges
-			# Set the user of the current process. Supply either a user ID
-			# or a user name.
-			def self.change_user(user)
-				if user.kind_of?(String)
-					user = Etc.getpwnam(user).uid
-				end
+module Process::Daemon::ProcessFileSpec
+	class SleepDaemon < Process::Daemon
+		def working_directory
+			File.expand_path("../tmp", __FILE__)
+		end
 
-				Process::Sys.setuid(user)
-			end
+		def startup
+			sleep 1 while true
+		end
+	end
 
-			# Get the user of the current process. Returns the user name.
-			def self.current_user
-				uid = Process::Sys.getuid
-
-				Etc.getpwuid(uid).name
-			end
+	describe Process::Daemon::ProcessFile do
+		let(:daemon) {SleepDaemon.instance}
+		
+		it "should save pid" do
+			Process::Daemon::ProcessFile.store(daemon, $$)
+			
+			expect(Process::Daemon::ProcessFile.recall(daemon)).to be == $$
+		end
+		
+		it "should clear pid" do
+			Process::Daemon::ProcessFile.clear(daemon)
+			
+			expect(Process::Daemon::ProcessFile.recall(daemon)).to be nil
+		end
+		
+		it "should be running" do
+			Process::Daemon::ProcessFile.store(daemon, $$)
+			
+			expect(Process::Daemon::ProcessFile.status(daemon)).to be :running
+		end
+		
+		it "should not be running" do
+			Process::Daemon::ProcessFile.clear(daemon)
+			
+			expect(Process::Daemon::ProcessFile.status(daemon)).to be :stopped
 		end
 	end
 end

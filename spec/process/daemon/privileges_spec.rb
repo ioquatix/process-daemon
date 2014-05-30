@@ -18,27 +18,23 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-require 'etc'
+require 'process/daemon'
+require 'process/daemon/privileges'
 
-module Process
-	class Daemon
-		module Privileges
-			# Set the user of the current process. Supply either a user ID
-			# or a user name.
-			def self.change_user(user)
-				if user.kind_of?(String)
-					user = Etc.getpwnam(user).uid
-				end
-
-				Process::Sys.setuid(user)
-			end
-
-			# Get the user of the current process. Returns the user name.
-			def self.current_user
-				uid = Process::Sys.getuid
-
-				Etc.getpwuid(uid).name
-			end
+module Process::Daemon::PrivilegesSpec
+	describe Process::Daemon::Privileges do
+		let(:daemon) {SleepDaemon.instance}
+		
+		it "should save report current user" do
+			expect(Process::Daemon::Privileges.current_user).to be == `whoami`.chomp
+		end
+		
+		it "should change current user" do
+			current_user = Process::Daemon::Privileges.current_user
+			
+			Process::Daemon::Privileges.change_user(current_user)
+			
+			expect(Process::Daemon::Privileges.current_user).to be == current_user
 		end
 	end
 end

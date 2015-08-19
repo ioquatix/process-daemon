@@ -180,20 +180,46 @@ module Process
 				# Check if the @daemon is already stopped...
 				unless ProcessFile.running(@daemon)
 					@output.puts Rainbow("Pid #{pid} is not running. Has daemon crashed?").red
-
 					@daemon.tail_log($stderr)
-
 					return
 				end
 
-				# Interrupt the process group:
 				pgid = -Process.getpgid(pid)
-				Process.kill("INT", pgid)
 
-				(@stop_timeout / STOP_PERIOD).to_i.times do
-					sleep STOP_PERIOD if ProcessFile.running(@daemon)
+				unless stop_by_interrupt(pgid)
+					stop_by_terminate_or_kill(pgid)
 				end
 
+				# If after doing our best the @daemon is still running (pretty odd)...
+				if ProcessFile.running(@daemon)
+					@output.puts Rainbow("Daemon appears to be still running!").red
+					return
+				else
+					@output.puts Rainbow("Daemon has left the building.").green
+				end
+
+				# Otherwise the @daemon has been stopped.
+				ProcessFile.clear(@daemon)
+			end
+			
+			private
+			
+			def stop_by_interrupt(pgid)
+				running = true
+				
+				# Interrupt the process group:
+				Process.kill("INT", pgid)
+
+				(@stop_timeout / STOP_PERIOD).ceil.times do
+					if running = ProcessFile.running(@daemon)
+						sleep STOP_PERIOD
+					end
+				end
+				
+				return running
+			end
+			
+			def stop_by_terminate_or_kill(pgid)
 				# TERM/KILL loop - if the daemon didn't die easily, shoot it a few more times.
 				(STOP_ATTEMPTS+1).times do |attempt|
 					break unless ProcessFile.running(@daemon)
@@ -210,17 +236,6 @@ module Process
 					@output.puts Rainbow("Waiting for #{timeout.round(1)}s for daemon to terminate...").blue
 					sleep(timeout)
 				end
-
-				# If after doing our best the @daemon is still running (pretty odd)...
-				if ProcessFile.running(@daemon)
-					@output.puts Rainbow("Daemon appears to be still running!").red
-					return
-				else
-					@output.puts Rainbow("Daemon has left the building.").green
-				end
-
-				# Otherwise the @daemon has been stopped.
-				ProcessFile.clear(@daemon)
 			end
 		end
 	end

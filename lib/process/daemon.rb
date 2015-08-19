@@ -22,6 +22,8 @@ require 'fileutils'
 
 require_relative 'daemon/controller'
 
+require_relative 'daemon/notification'
+
 require_relative 'daemon/log_file'
 require_relative 'daemon/process_file'
 
@@ -51,6 +53,8 @@ module Process
 	class Daemon
 		def initialize(working_directory = ".")
 			@working_directory = working_directory
+			
+			@shutdown_notification = Notification.new
 		end
 		
 		# Return the name of the daemon
@@ -109,9 +113,12 @@ module Process
 
 			return false
 		end
-
+		
 		# The main function to setup any environment required by the daemon
 		def prefork
+			# Ignore any previously setup signal handler for SIGINT:
+			trap(:INT, :DEFAULT)
+			
 			# We freeze the working directory because it can't change after forking:
 			@working_directory = File.expand_path(working_directory)
 			
@@ -123,12 +130,12 @@ module Process
 			FileUtils.mkdir_p(runtime_directory)
 		end
 
-		# The main function to start the daemon
+		# The main function to start the daemon. This function can either block indefinitely or call #sleep_until_shutdown. When this function returns, the daemon will exit normally.
 		def startup
 		end
 
 		# The main function to stop the daemon
-		def shutdown
+		def shutdown(timeout = 1.0)
 			# Interrupt all children processes, preferably to stop them so that they are not left behind.
 			Process.kill(:INT, 0)
 		end
@@ -146,14 +153,27 @@ module Process
 			end
 		end
 		
+		# Request that the sleep_until_shutdown function call proceeds to the shutdown phase.
+		def request_shutdown
+			@shutdown_notification.signal
+		end
+		
+		# Call this function from #startup to wait until the daemon has been signalled to stop.
+		def sleep_until_shutdown
+			trap(:INT) do
+				self.request_shutdown
+			end
+
+			@shutdown_notification.wait
+
+			shutdown
+		end
+		
+		# Run the daemon, set it's process title, trap SIGINT and call #startup.
 		def run
-			
 			self.title = self.name
 			
-			trap("INT") do
-				shutdown
-			end
-			
+			# This function should not return until the daemon is exiting.
 			startup
 		end
 		

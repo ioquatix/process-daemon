@@ -160,8 +160,12 @@ module Process
 
 			# How long to wait between checking the daemon process when shutting down:
 			STOP_PERIOD = 0.1
+			STOP_ATTEMPTS = 5
+			
+			# The factor which controls how long we sleep between attempts to kill the process. Only applies to processes which don't stop immediately.
+			STOP_WAIT_FACTOR = 3.0
 
-			# Stops the daemon process.
+			# Stops the daemon process. This function initially sends SIGINT. It waits STOP_PERIOD and checks if the daemon is still running. If it is, it sends SIGTERM, and then waits a bit longer. It tries STOP_ATTEMPTS times until it basically assumes the daemon is stuck and sends SIGKILL.
 			def stop
 				@output.puts Rainbow("Stopping #{@daemon.name} daemon...").blue
 
@@ -190,23 +194,29 @@ module Process
 					sleep STOP_PERIOD if ProcessFile.running(@daemon)
 				end
 
-				# Kill/Term loop - if the @daemon didn't die easily, shoot
-				# it a few more times.
-				attempts = 5
-				while ProcessFile.running(@daemon) and attempts > 0
-					sig = (attempts <= 2) ? "KILL" : "TERM"
+				# TERM/KILL loop - if the daemon didn't die easily, shoot it a few more times.
+				(STOP_ATTEMPTS+1).times do |attempt|
+					break unless ProcessFile.running(@daemon)
 
-					@output.puts Rainbow("Sending #{sig} to process group #{pgid}...").red
-					Process.kill(sig, pgid)
+					# SIGKILL gets sent on the last attempt.
+					signal_name = (attempt < STOP_ATTEMPTS) ? "TERM" : "KILL"
 
-					attempts -= 1
-					sleep 1
+					@output.puts Rainbow("Sending #{signal_name} to process group #{pgid}...").red
+
+					Process.kill(signal_name, pgid)
+
+					# We iterate quickly to start with, and slow down if the process seems unresponsive.
+					timeout = STOP_PERIOD + (attempt.to_f / STOP_ATTEMPTS) * STOP_WAIT_FACTOR
+					@output.puts Rainbow("Waiting for #{timeout.round(1)}s for daemon to terminate...").blue
+					sleep(timeout)
 				end
 
 				# If after doing our best the @daemon is still running (pretty odd)...
 				if ProcessFile.running(@daemon)
 					@output.puts Rainbow("Daemon appears to be still running!").red
 					return
+				else
+					@output.puts Rainbow("Daemon has left the building.").green
 				end
 
 				# Otherwise the @daemon has been stopped.

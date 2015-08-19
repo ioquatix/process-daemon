@@ -1,4 +1,4 @@
-# Copyright, 2014, by Samuel G. D. Williams. <http://www.codeotaku.com>
+# Copyright, 2015, by Samuel G. D. Williams. <http://www.codeotaku.com>
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -20,6 +20,36 @@
 
 module Process
 	class Daemon
-		VERSION = "0.6.0"
+		# This is a one shot cross-process notification mechanism using pipes. It can also be used in the same process if required, e.g. the self-pipe trick.
+		class Notification
+			def initialize
+				@output, @input = IO.pipe
+				
+				@signalled = false
+			end
+			
+			def signal
+				@signalled = true
+				
+				@input.puts
+			end
+			
+			def signalled?
+				@signalled
+			end
+			
+			def wait(timeout: nil)
+				if timeout
+					read_ready, _, _ = IO.select([@output], [], [], timeout)
+					
+					return false unless read_ready and read_ready.any?
+				end
+				
+				@signalled or @output.read(1)
+				
+				# Just in case that this was split across multiple processes.
+				@signalled = true
+			end
+		end
 	end
 end

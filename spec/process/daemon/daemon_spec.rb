@@ -56,18 +56,15 @@ module Process::Daemon::DaemonSpec
 		end
 		
 		def run
+			# This is the correct way to cleanly shutdown the server, apparently:
+			trap(:INT) do
+				@rpc_server.shutdown
+			end
+			
 			puts "RPC server starting..."
 			@rpc_server.start
-			puts "RPC server stopping..."
-		rescue Interrupt
-			puts "RPC server interrupted..."
 		ensure
 			puts "Stop accepting new connections to RPC server..."
-			@rpc_server.stop
-		end
-
-		def shutdown
-			puts "Shutting down the RPC server..."
 			@rpc_server.shutdown
 		end
 	end

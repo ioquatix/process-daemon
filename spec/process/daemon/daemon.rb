@@ -51,12 +51,14 @@ class XMLRPCDaemon < Process::Daemon
 	end
 	
 	def run
+		# This is the correct way to cleanly shutdown the server:
+		trap(:INT) do
+			@rpc_server.shutdown
+		end
+		
 		@rpc_server.start
-	end
-	
-	def shutdown
-		puts "Stopping the RPC server..."
-		@rpc_server.stop
+	ensure
+		@rpc_server.shutdown
 	end
 end
 

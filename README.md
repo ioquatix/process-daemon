@@ -10,17 +10,40 @@
 
 Add this line to your application's Gemfile:
 
-    gem 'process-daemon'
+		gem 'process-daemon'
 
 And then execute:
 
-    $ bundle
+		$ bundle
 
 Or install it yourself as:
 
-    $ gem install process-daemon
+		$ gem install process-daemon
 
 ## Usage
+
+A process daemon has a specific structure:
+
+	class MyDaemon < Process::Daemon
+		def startup
+			# Called when the daemon is initialized in it's own process. Should return quickly.
+		end
+		
+		def run
+			# Do the actual work. Does not need to be implemented, e.g. if using threads or other background processing mechanisms.
+		end
+		
+		def shutdown
+			# Stop everything that was setup in startup.
+		end
+	end
+	
+	# Make this file executable and have a command line interface:
+	MyDaemon.daemonize
+
+For more details about things you can override and customize, see the [documentation](http://www.rubydoc.info/gems/process-daemon).
+
+### WEBRick Server
 
 Create a file for your daemon, e.g. `daemon.rb`:
 
@@ -30,13 +53,7 @@ Create a file for your daemon, e.g. `daemon.rb`:
 	
 	# Very simple XMLRPC daemon
 	class XMLRPCDaemon < Process::Daemon
-		def working_directory
-			File.expand_path("../tmp", __FILE__)
-		end
-	
 		def startup
-			puts "Starting server..."
-			
 			@rpc_server = WEBrick::HTTPServer.new(
 				:Port => 31337,
 				:BindAddress => "0.0.0.0"
@@ -49,25 +66,52 @@ Create a file for your daemon, e.g. `daemon.rb`:
 			end
 			
 			@rpc_server.mount("/RPC2", @listener)
-			
-			begin
-				@rpc_server.start
-			rescue Interrupt
-				puts "Daemon interrupted..."
-			ensure
-				@rpc_server.shutdown
-			end
 		end
 		
-		def shutdown
-			puts "Stopping the RPC server..."
-			@rpc_server.stop
+		def run
+			# This is the correct way to cleanly shutdown the server:
+			trap(:INT) do
+				@rpc_server.shutdown
+			end
+			
+			@rpc_server.start
+		ensure
+			@rpc_server.shutdown
 		end
 	end
 	
 	XMLRPCDaemon.daemonize
 
 Then run `daemon.rb start`. To stop the daemon, run `daemon.rb stop`.
+
+### Celluloid Actor
+
+`Process::Daemon` is the perfect place to spawn your [celluloid](https://celluloid.io) actors.
+
+	require 'celluloid'
+	require 'process/daemon'
+	
+	class MyActor
+		include Celluloid::Actor
+		
+		def long_running
+			sleep 1000
+		end
+	end
+	
+	class MyDaemon < Process::Daemon
+		def startup
+			@actor = MyActor.new
+			
+			@actor.async.long_running_process
+		end
+		
+		def shutdown
+			@actor.terminate
+		end
+	end
+	
+	MyDaemon.daemonize
 
 ## Contributing
 

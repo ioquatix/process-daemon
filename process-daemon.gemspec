@@ -9,7 +9,7 @@ Gem::Specification.new do |spec|
 	spec.authors       = ["Samuel Williams"]
 	spec.email         = ["samuel.williams@oriontransfer.co.nz"]
 	spec.summary       = %q{`Process::Daemon` is a stable and helpful base class for long running tasks and daemons. Provides standard `start`, `stop`, `restart`, `status` operations.}
-	spec.homepage      = ""
+	spec.homepage      = "https://github.com/ioquatix/process-daemon"
 	spec.license       = "MIT"
 
 	spec.files         = `git ls-files`.split($/)

@@ -129,16 +129,6 @@ module Process
 			FileUtils.mkdir_p(log_directory)
 			FileUtils.mkdir_p(runtime_directory)
 		end
-
-		# The main function to start the daemon. This function can either block indefinitely or call #sleep_until_shutdown. When this function returns, the daemon will exit normally.
-		def startup
-		end
-
-		# The main function to stop the daemon
-		def shutdown(timeout = 1.0)
-			# Interrupt all children processes, preferably to stop them so that they are not left behind.
-			Process.kill(:INT, 0)
-		end
 		
 		attr :title
 		
@@ -153,28 +143,46 @@ module Process
 			end
 		end
 		
-		# Request that the sleep_until_shutdown function call proceeds to the shutdown phase.
+		# Request that the sleep_until_interrupted function call returns.
 		def request_shutdown
 			@shutdown_notification.signal
 		end
 		
-		# Call this function from #startup to wait until the daemon has been signalled to stop.
-		def sleep_until_shutdown
+		# Call this function to sleep until the daemon is sent SIGINT.
+		def sleep_until_interrupted
 			trap(:INT) do
 				self.request_shutdown
 			end
 
 			@shutdown_notification.wait
-
-			shutdown
 		end
 		
-		# Run the daemon, set it's process title, trap SIGINT and call #startup.
+		# This function must setup the daemon quickly and return.
+		def startup
+		end
+		
+		# If you want to implement a long running process you override this method. You may like to call super but it is not necessary to use the supplied interruption machinery.
 		def run
+			sleep_until_interrupted
+		end
+		
+		# This function should terminate any active processes in the daemon and return as quickly as possible.
+		def shutdown
+		end
+		
+		# The entry point from the newly forked process.
+		def spawn
 			self.title = self.name
 			
-			# This function should not return until the daemon is exiting.
-			startup
+			self.startup
+			
+			begin
+				self.run
+			rescue Interrupt
+				$stderr.puts "Daemon interrupted, proceeding to shutdown."
+			end
+			
+			self.shutdown
 		end
 		
 		# A shared instance of the daemon.

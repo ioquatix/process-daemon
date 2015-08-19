@@ -81,7 +81,7 @@ module Process
 					$stderr.sync = true
 
 					begin
-						@daemon.run
+						@daemon.spawn
 					rescue Exception => error
 						$stderr.puts "=== Daemon Exception Backtrace @ #{Time.now.to_s} ==="
 						$stderr.puts "#{error.class}: #{error.message}"

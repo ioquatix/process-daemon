@@ -48,14 +48,10 @@ class XMLRPCDaemon < Process::Daemon
 		end
 		
 		@rpc_server.mount("/RPC2", @listener)
-		
-		begin
-			@rpc_server.start
-		rescue Interrupt
-			puts "Daemon interrupted..."
-		ensure
-			@rpc_server.shutdown
-		end
+	end
+	
+	def run
+		@rpc_server.start
 	end
 	
 	def shutdown

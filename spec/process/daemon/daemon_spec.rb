@@ -53,22 +53,22 @@ module Process::Daemon::DaemonSpec
 			end
 
 			@rpc_server.mount("/RPC2", @listener)
-
-			begin
-				puts "Daemon starting..."
-				@rpc_server.start
-				puts "Daemon stopping..."
-			rescue Interrupt
-				puts "Daemon interrupted..."
-			ensure
-				puts "Daemon shutdown..."
-				@rpc_server.shutdown
-			end
+		end
+		
+		def run
+			puts "RPC server starting..."
+			@rpc_server.start
+			puts "RPC server stopping..."
+		rescue Interrupt
+			puts "RPC server interrupted..."
+		ensure
+			puts "Stop accepting new connections to RPC server..."
+			@rpc_server.stop
 		end
 
 		def shutdown
-			puts "Stopping the RPC server..."
-			@rpc_server.stop
+			puts "Shutting down the RPC server..."
+			@rpc_server.shutdown
 		end
 	end
 
@@ -77,7 +77,7 @@ module Process::Daemon::DaemonSpec
 			File.expand_path("../tmp", __FILE__)
 		end
 
-		def startup
+		def run
 			sleep 1 while true
 		end
 	end

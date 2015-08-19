@@ -1,5 +1,12 @@
 language: ruby
+sudo: false
 rvm:
-  - 1.9
-  - 2.0
+  - 2.2
   - 2.1
+  - 2.0.0
+  - 1.9.3
+  - rbx-2
+matrix:
+  allow_failures:
+    - rvm: rbx-2 
+env: COVERAGE=true

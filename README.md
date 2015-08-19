@@ -2,7 +2,9 @@
 
 `Process::Daemon` is a stable and helpful base class for long running tasks and daemons. Provides standard `start`, `stop`, `restart`, `status` operations.
 
-[![Build Status](https://travis-ci.org/ioquatix/process-daemon.svg)](https://travis-ci.org/ioquatix/process-daemon)
+[![Build Status](https://travis-ci.org/ioquatix/process-daemon.svg?branch=master)](https://travis-ci.org/ioquatix/process-daemon)
+[![Code Climate](https://codeclimate.com/github/ioquatix/process-daemon.png)](https://codeclimate.com/github/ioquatix/process-daemon)
+[![Coverage Status](https://coveralls.io/repos/ioquatix/process-daemon/badge.svg?branch=master)](https://coveralls.io/r/ioquatix/process-daemon?branch=master)
 
 ## Installation
 
@@ -79,7 +81,7 @@ Then run `daemon.rb start`. To stop the daemon, run `daemon.rb stop`.
 
 Released under the MIT license.
 
-Copyright, 2014, by [Samuel G. D. Williams](http://www.codeotaku.com/samuel-williams).
+Copyright, 2015, by [Samuel G. D. Williams](http://www.codeotaku.com/samuel-williams).
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

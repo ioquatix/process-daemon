@@ -11,6 +11,7 @@ Gem::Specification.new do |spec|
 	spec.summary       = %q{`Process::Daemon` is a stable and helpful base class for long running tasks and daemons. Provides standard `start`, `stop`, `restart`, `status` operations.}
 	spec.homepage      = "https://github.com/ioquatix/process-daemon"
 	spec.license       = "MIT"
+	spec.has_rdoc      = "yard"
 
 	spec.files         = `git ls-files`.split($/)
 	spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }

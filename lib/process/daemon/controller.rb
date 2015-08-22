@@ -153,13 +153,16 @@ module Process
 				
 				return daemon_state
 			end
-
+			
+			# The pid of the daemon if it is available. The pid may be invalid if the daemon has crashed.
 			def pid
 				ProcessFile.recall(@daemon)
 			end
 
 			# How long to wait between checking the daemon process when shutting down:
 			STOP_PERIOD = 0.1
+			
+			# The number of attempts to stop the daemon using SIGTERM. On the last attempt, SIGKILL is used.
 			STOP_ATTEMPTS = 5
 			
 			# The factor which controls how long we sleep between attempts to kill the process. Only applies to processes which don't stop immediately.

@@ -41,7 +41,17 @@ A process daemon has a specific structure:
 	# Make this file executable and have a command line interface:
 	MyDaemon.daemonize
 
-For more details about things you can override and customize, see the [documentation](http://www.rubydoc.info/gems/process-daemon).
+### Working directory
+
+By default, daemons run in the current working directory. They setup paths according to the following logic:
+
+	working_directory = "."
+	log_directory = #{working_directory}/log
+	log_file_path = #{log_directory}/#{name}.log
+	runtime_directory = #{working_directory}/run
+	process_file_path = #{runtime_directory}/#{name}.pid
+
+After calling `prefork`, the working directory is expanded to a full path and should not be changed.
 
 ### WEBRick Server
 

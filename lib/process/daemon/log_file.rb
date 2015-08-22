@@ -20,6 +20,7 @@
 
 module Process
 	class Daemon
+		# This is a special file instance which provides the ability to read a log file from the end backwards.
 		class LogFile < File
 			# Yields the lines of a log file in reverse order, once the yield statement returns true, stops, and returns the lines in order.
 			def tail_log

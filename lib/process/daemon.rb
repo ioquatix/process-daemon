@@ -28,29 +28,9 @@ require_relative 'daemon/log_file'
 require_relative 'daemon/process_file'
 
 module Process
-	# This class is the base daemon class. If you are writing a daemon, you should inherit from this class.
-	#
-	# The basic structure of a daemon is as follows:
-	# 	
-	# 	class Server < Process::Daemon
-	# 		def startup
-	# 			# Long running process, e.g. web server, game server, etc.
-	# 		end
-	# 		
-	# 		def shutdown
-	# 			# Stop the process above, usually called on SIGINT.
-	# 		end
-	# 	end
-	# 	
-	# 	Server.daemonize
-	#
-	# The base directory specifies a path such that:
-	#   working_directory = "."
-	#   log_directory = #{working_directory}/log
-	#   log_file_path = #{log_directory}/#{name}.log
-	#   runtime_directory = #{working_directory}/run
-	#   process_file_path = #{runtime_directory}/#{name}.pid
+	# Provides the infrastructure for spawning a daemon.
 	class Daemon
+		# Initialize the daemon in the given working root.
 		def initialize(working_directory = ".")
 			@working_directory = working_directory
 			
@@ -119,17 +99,14 @@ module Process
 			# Ignore any previously setup signal handler for SIGINT:
 			trap(:INT, :DEFAULT)
 			
-			# We freeze the working directory because it can't change after forking:
+			# We update the working directory to a full path:
 			@working_directory = File.expand_path(working_directory)
-			
-			def self.working_directory
-				@working_directory
-			end
 			
 			FileUtils.mkdir_p(log_directory)
 			FileUtils.mkdir_p(runtime_directory)
 		end
 		
+		# The process title of the daemon.
 		attr :title
 		
 		# Set the process title - only works after daemon has forked.
@@ -204,17 +181,17 @@ module Process
 			controller(options).daemonize(argv)
 		end
 		
-		# Start the daemon instance.
+		# Start the shared daemon instance.
 		def self.start
 			controller.start
 		end
 		
-		# Stop the daemon instance.
+		# Stop the shared daemon instance.
 		def self.stop
 			controller.stop
 		end
 		
-		# Check if the daemon is runnning or not.
+		# Check if the shared daemon instance is runnning or not.
 		def self.status
 			controller.status
 		end

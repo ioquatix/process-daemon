@@ -22,6 +22,7 @@ require 'etc'
 
 module Process
 	class Daemon
+		# Provides functions for changing the current user.
 		module Privileges
 			# Set the user of the current process. Supply either a user ID
 			# or a user name.

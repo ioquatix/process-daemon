@@ -28,16 +28,20 @@ module Process
 				@signalled = false
 			end
 			
+			# Signal the notification.
 			def signal
 				@signalled = true
 				
 				@input.puts
 			end
 			
+			# Was this notification signalled?
 			def signalled?
 				@signalled
 			end
 			
+			# Wait/block until a signal is received. Optional timeout.
+			# @param timeout [Integer] the time to wait in seconds.
 			def wait(timeout: nil)
 				if timeout
 					read_ready, _, _ = IO.select([@output], [], [], timeout)

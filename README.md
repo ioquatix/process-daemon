@@ -5,6 +5,8 @@
 [![Build Status](https://travis-ci.org/ioquatix/process-daemon.svg?branch=master)](https://travis-ci.org/ioquatix/process-daemon)
 [![Code Climate](https://codeclimate.com/github/ioquatix/process-daemon.png)](https://codeclimate.com/github/ioquatix/process-daemon)
 [![Coverage Status](https://coveralls.io/repos/ioquatix/process-daemon/badge.svg?branch=master)](https://coveralls.io/r/ioquatix/process-daemon?branch=master)
+[![Documentation](http://img.shields.io/badge/yard-docs-blue.svg)](http://www.rubydoc.info/gems/process-daemon)
+[![Code](http://img.shields.io/badge/github-code-blue.svg)](https://github.com/remote-exec/command-designer)
 
 ## Installation
 

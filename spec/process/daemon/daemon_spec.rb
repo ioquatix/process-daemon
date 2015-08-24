@@ -69,13 +69,9 @@ module Process::Daemon::DaemonSpec
 		end
 	end
 
-	class SleepDaemon < Process::Daemon
+	class DefaultDaemon < Process::Daemon
 		def working_directory
 			File.expand_path("../tmp", __FILE__)
-		end
-
-		def run
-			sleep 1 while true
 		end
 	end
 
@@ -90,6 +86,7 @@ module Process::Daemon::DaemonSpec
 		
 		it "should be running" do
 			expect(XMLRPCDaemon.status).to be == :running
+			expect(XMLRPCDaemon.instance.crashed?).to be_falsey
 		end
 		
 		it "should respond to connections" do
@@ -102,7 +99,7 @@ module Process::Daemon::DaemonSpec
 		end
 		
 		it "should be a unique instance" do
-			expect(XMLRPCDaemon.instance).to_not be == SleepDaemon.instance
+			expect(XMLRPCDaemon.instance).to_not be == DefaultDaemon.instance
 		end
 		
 		it "should produce useful output" do

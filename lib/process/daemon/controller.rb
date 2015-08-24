@@ -42,18 +42,18 @@ module Process
 				case (argv.shift || :default).to_sym
 				when :start
 					start
-					status
+					show_status
 				when :stop
 					stop
-					status
+					show_status
 					ProcessFile.cleanup(@daemon)
 				when :restart
 					stop
 					ProcessFile.cleanup(@daemon)
 					start
-					status
+					show_status
 				when :status
-					status
+					show_status
 				else
 					@output.puts Rainbow("Invalid command. Please specify start, restart, stop or status.").red
 				end
@@ -99,7 +99,7 @@ module Process
 			def start
 				@output.puts Rainbow("Starting #{@daemon.name} daemon...").blue
 
-				case ProcessFile.status(@daemon)
+				case self.status
 				when :running
 					@output.puts Rainbow("Daemon already running!").blue
 					return
@@ -132,9 +132,11 @@ module Process
 			
 			# Prints out the status of the daemon
 			def status
-				daemon_state = ProcessFile.status(@daemon)
-				
-				case daemon_state
+				ProcessFile.status(@daemon)
+			end
+			
+			def show_status
+				case self.status
 				when :running
 					@output.puts Rainbow("Daemon status: running pid=#{ProcessFile.recall(@daemon)}").green
 				when :unknown
@@ -150,8 +152,6 @@ module Process
 				when :stopped
 					@output.puts Rainbow("Daemon status: stopped").blue
 				end
-				
-				return daemon_state
 			end
 			
 			# The pid of the daemon if it is available. The pid may be invalid if the daemon has crashed.

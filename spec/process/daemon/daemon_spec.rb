@@ -112,6 +112,7 @@ module Process::Daemon::DaemonSpec
 			
 			expect(controller.status).to be == :running
 			
+			controller.show_status
 			expect(output.string).to match /Daemon status: running pid=\d+/
 			
 			output.rewind

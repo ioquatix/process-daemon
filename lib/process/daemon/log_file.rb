@@ -31,7 +31,7 @@ module Process
 				reverse_each_line do |line|
 					lines << line
 					
-					break if yield line
+					break if block_given? and yield line
 				end
 
 				return lines.reverse
@@ -81,14 +81,19 @@ module Process
 
 				while offset == nil
 					chunk = read_reverse(REVERSE_BUFFER_SIZE)
+
 					return (buf == "" ? nil : buf) if chunk == nil
 
 					buf = chunk + buf
 
-					offset = buf.rindex(sep_string)
+					# Don't consider the last newline.
+					offset = buf.rindex(sep_string, -(sep_string.length + 1))
 				end
 
-				line = buf[offset...buf.size].sub(sep_string, "")
+				# Don't include newline:
+				offset += 1
+
+				line = buf[offset...buf.size]
 
 				seek((end_pos - buf.size) + offset, IO::SEEK_SET)
 

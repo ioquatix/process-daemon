@@ -27,31 +27,31 @@ require 'xmlrpc/server'
 require 'xmlrpc/client'
 
 module Process::Daemon::DaemonizeSpec
-	class SleepDaemon < Process::Daemon
+	class CrashDaemon < Process::Daemon
 		def working_directory
 			File.expand_path("../tmp", __FILE__)
+		end
+		
+		def run
+			and_bobs_your_uncle
 		end
 	end
 
 	describe Process::Daemon do
-		it "should start daemon" do
-			SleepDaemon.daemonize(:start)
+		it "should crash daemon and print exception" do
+			output = StringIO.new
 			
-			expect(SleepDaemon.status).to be == :running
+			controller = Process::Daemon::Controller.new(CrashDaemon.instance, :output => output)
 			
-			SleepDaemon.daemonize(:stop)
+			controller.start
 			
-			expect(SleepDaemon.status).to be == :stopped
-		end
-		
-		it "should restart daemon" do
-			SleepDaemon.daemonize(:restart)
+			sleep 1
 			
-			expect(SleepDaemon.status).to be == :running
+			controller.show_status
 			
-			SleepDaemon.daemonize(:stop)
-			
-			expect(SleepDaemon.status).to be == :stopped
+			expect(CrashDaemon.status).to be == :unknown
+			expect(output.string).to include("=== Daemon Exception Backtrace", "=== Daemon Crashed")
+			expect(output.string).to include("NameError", "and_bobs_your_uncle")
 		end
 	end
 end

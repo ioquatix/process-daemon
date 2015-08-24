@@ -162,38 +162,38 @@ module Process
 			self.shutdown
 		end
 		
-		# A shared instance of the daemon.
-		def self.instance
-			@instance ||= self.new
-		end
-		
-		# The process controller, responsible for managing the daemon process start, stop, restart, etc.
-		def self.controller(options = {})
-			@controller ||= Controller.new(instance, options)
-		end
-		
-		# The main entry point for daemonized scripts.
-		def self.daemonize(*args)
-			# Wish Ruby 2.0 kwargs were backported to 1.9.3... oh well:
-			options = (args.last === Hash) ? args.pop : {}
-			argv = (args.last === Array) ? args.pop : ARGV
+		class << self
+			# A shared instance of the daemon.
+			def instance
+				@instance ||= self.new
+			end
 			
-			controller(options).daemonize(argv)
-		end
-		
-		# Start the shared daemon instance.
-		def self.start
-			controller.start
-		end
-		
-		# Stop the shared daemon instance.
-		def self.stop
-			controller.stop
-		end
-		
-		# Check if the shared daemon instance is runnning or not.
-		def self.status
-			controller.status
+			# The process controller, responsible for managing the daemon process start, stop, restart, etc.
+			def controller(options = {})
+				@controller ||= Controller.new(instance, options)
+			end
+			
+			# The main entry point for daemonized scripts.
+			def daemonize(*args, **options)
+				args = ARGV if args.empty?
+				
+				controller(options).daemonize(args)
+			end
+			
+			# Start the shared daemon instance.
+			def start
+				controller.start
+			end
+			
+			# Stop the shared daemon instance.
+			def stop
+				controller.stop
+			end
+			
+			# Check if the shared daemon instance is runnning or not.
+			def status
+				controller.status
+			end
 		end
 	end
 end

@@ -32,10 +32,6 @@ module Process::Daemon::DaemonizeSpec
 		def working_directory
 			File.expand_path("../tmp", __FILE__)
 		end
-
-		def run
-			sleep 1 while true
-		end
 	end
 
 	describe Process::Daemon do
@@ -46,7 +42,17 @@ module Process::Daemon::DaemonizeSpec
 			
 			SleepDaemon.daemonize(:stop)
 			
-			expect(SleepDaemon.status).to_not be == :running
+			expect(SleepDaemon.status).to be == :stopped
+		end
+		
+		it "should restart daemon" do
+			SleepDaemon.daemonize(:restart)
+			
+			expect(SleepDaemon.status).to be == :running
+			
+			SleepDaemon.daemonize(:stop)
+			
+			expect(SleepDaemon.status).to be == :stopped
 		end
 	end
 end

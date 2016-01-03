@@ -32,11 +32,12 @@ A process daemon has a specific structure:
 		end
 		
 		def run
-			# Do the actual work. Does not need to be implemented, e.g. if using threads or other background processing mechanisms.
+			# Do the actual work. Does not need to be implemented, e.g. if using threads or other background processing mechanisms which were kicked off in #startup.
 		end
 		
 		def shutdown
-			# Stop everything that was setup in startup.
+			# Stop everything that was setup in startup. Called as part of main daemon thread/process, not in trap context (e.g. SIGINT).
+			# Asynchronous code can call self.request_shutdown from a trap context to interrupt the main process, provided you aren't doing work in #run.
 		end
 	end
 	
@@ -56,6 +57,8 @@ By default, daemons run in the current working directory. They setup paths accor
 After calling `prefork`, the working directory is expanded to a full path and should not be changed.
 
 ### WEBRick Server
+
+Some servers must run on the main process thread. In this case, the normal interrupt mechanism won't be used and we will handle signals directly.
 
 Create a file for your daemon, e.g. `daemon.rb`:
 

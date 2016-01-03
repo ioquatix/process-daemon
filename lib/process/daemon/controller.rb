@@ -73,8 +73,8 @@ module Process
 					File.umask 0000
 					Dir.chdir @daemon.working_directory
 
-					$stdin.reopen "/dev/null"
-					$stdout.reopen @daemon.log_file_path, "a"
+					$stdin.reopen '/dev/null'
+					$stdout.reopen @daemon.log_file_path, 'a'
 					$stdout.sync = true
 				
 					$stderr.reopen $stdout

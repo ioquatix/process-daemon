@@ -38,6 +38,7 @@ module Process::Daemon::NotificationSpec
 		end
 		
 		it "can be signalled within trap context and across processes" do
+			ready = Process::Daemon::Notification.new
 			notification = Process::Daemon::Notification.new
 			
 			pid = fork do
@@ -46,8 +47,12 @@ module Process::Daemon::NotificationSpec
 					exit(0)
 				end
 				
+				ready.signal
+				
 				sleep
 			end
+			
+			ready.wait(timeout: 5.0)
 			
 			Process.kill(:INT, pid)
 			

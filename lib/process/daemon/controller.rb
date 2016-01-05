@@ -189,7 +189,7 @@ module Process
 
 				pgid = -Process.getpgid(pid)
 
-				unless stop_by_interrupt(pgid)
+				if stop_by_interrupt(pgid)
 					stop_by_terminate_or_kill(pgid)
 				end
 
@@ -208,13 +208,14 @@ module Process
 			private
 			
 			def stop_by_interrupt(pgid)
-				running = true
+				running = false
 				
 				# Interrupt the process group:
 				Process.kill("INT", pgid)
 
 				(@stop_timeout / STOP_PERIOD).ceil.times do
 					if running = ProcessFile.running(@daemon)
+						Process.kill("INT", pgid)
 						sleep STOP_PERIOD
 					end
 				end

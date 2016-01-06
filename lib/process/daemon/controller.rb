@@ -188,8 +188,12 @@ module Process
 				end
 
 				pgid = -Process.getpgid(pid)
-
+				
+				# Stop by interrupt sends a single interrupt and waits for the process to terminate:
 				unless stop_by_interrupt(pgid)
+					# If the process is still running, we try sending SIGTERM followed by SIGKILL:
+					@output.puts Rainbow("** Daemon did not stop gracefully after #{@stop_timeout}s **").red
+					
 					stop_by_terminate_or_kill(pgid)
 				end
 
@@ -207,6 +211,7 @@ module Process
 			
 			private
 			
+			# Returns true if the process was stopped.
 			def stop_by_interrupt(pgid)
 				running = true
 				
@@ -219,7 +224,7 @@ module Process
 					end
 				end
 				
-				return running
+				return !running
 			end
 			
 			def stop_by_terminate_or_kill(pgid)

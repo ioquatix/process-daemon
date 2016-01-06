@@ -21,38 +21,51 @@
 require 'process/daemon'
 require 'process/daemon/process_file'
 
-module Process::Daemon::ProcessFileSpec
+module Process::Daemon::TerminateSpec
 	class SleepDaemon < Process::Daemon
 		def working_directory
 			File.expand_path("../tmp", __FILE__)
 		end
+
+		def startup
+			setup_signals
+		end
+		
+		def setup_signals
+			trap('INT') do
+				puts 'INT'
+			end
+			
+			trap('TERM') do
+				puts 'TERM'
+			end
+		end
+
+		def run
+			sleep 1 while true
+		end
 	end
 
-	describe Process::Daemon::ProcessFile do
+	describe Process::Daemon do
 		let(:daemon) {SleepDaemon.instance}
+		let(:controller) {Process::Daemon::Controller.new(daemon)}
 		
-		it "should save pid" do
-			Process::Daemon::ProcessFile.store(daemon, $$)
-			
-			expect(Process::Daemon::ProcessFile.recall(daemon)).to be == $$
-		end
+		# Print out the daemon log file:
+		#after(:each) do
+		#	system('cat', daemon.log_file_path)
+		#end
 		
-		it "should clear pid" do
-			Process::Daemon::ProcessFile.clear(daemon)
+		it "should be killed" do
+			controller.start
 			
-			expect(Process::Daemon::ProcessFile.recall(daemon)).to be nil
-		end
-		
-		it "should be running" do
-			Process::Daemon::ProcessFile.store(daemon, $$)
+			expect(controller.status).to be == :running
 			
-			expect(Process::Daemon::ProcessFile.status(daemon)).to be :running
-		end
-		
-		it "should not be running" do
-			Process::Daemon::ProcessFile.clear(daemon)
+			controller.stop
 			
-			expect(Process::Daemon::ProcessFile.status(daemon)).to be :stopped
+			expect(controller.status).to be == :stopped
+			
+			output = File.readlines(daemon.log_file_path).last(6)
+			expect(output).to be == ["INT\n", "TERM\n", "TERM\n", "TERM\n", "TERM\n", "TERM\n"]
 		end
 	end
 end
